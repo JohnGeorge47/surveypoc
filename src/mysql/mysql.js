@@ -1,36 +1,18 @@
-import mysql from "mysql"
+import mysql from "mysql2/promise"
 import  config from '../../config/config.json'
 
 class MySQL {
     constructor() {
-        this.connection = mysql.createConnection({
-            host:config.MYSQL_USERNAME,
-            user: MYSQL_USERNAME,
-            password: MYSQL_PASSWORD,
-            database: MYSQL_DB
+        this.connection = mysql.createPool({
+            host:"localhost",
+            user: config.MYSQL_USERNAME,
+            password: config.MYSQL_PASSWORD,
+            database: config.MYSQL_DB,
+            connectionLimit:10,
+            waitForConnections:true,
+            queueLimit:0
         })
     }
-    DoQuery(query) {
-        return new Promise((resolve, reject) => {
-            this.connection.query(query, function (err, rows, fields) {
-                if (err) {
-                    return reject(err)
-                }
-                return resolve(rows)
-            })
-        })
-    }
-    Close(){
-        return new Promise((resolve,reject)=>{
-            this.connection.end(function(err){
-                if(err){
-                   return reject(err)
-                }
-                return resolve("closed successfuly")
-            })
-        })
-    }
-
 }
 
 export default MySQL
