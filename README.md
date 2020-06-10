@@ -1,0 +1,1 @@
+The Project uses express js and mysql as the db
