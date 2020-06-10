@@ -12,4 +12,11 @@ utils.FormValidation=(reqbody)=>{
     return 1
 }
 
+utils.ValidateSurveyForm=(reqbody)=>{
+    if(!reqbody.hasOwnProperty('email_id')){
+      return 0
+    }
+    return 1
+}
+
 module.exports=utils

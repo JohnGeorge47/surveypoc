@@ -28,7 +28,7 @@ signup_controller.post = async (req, res) => {
         let responseData={
             "success":"ok"
         }
-        return rp.success(res,responsedata)
+        return rp.success(res,responseData)
     } catch (err) {
         return rp.error(res, err, 400)
     }
