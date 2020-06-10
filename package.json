@@ -4,12 +4,24 @@
   "description": "This a poc as part of an assignment for EduFund",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "export NODE_ENV=local && nodemon --exec babel-node src/server.js",
+    "build": "babel src --out-dir dist",
+    "serve": "export NODE_ENV=qa && node dist/server.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.19.0",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "express-http-context": "^1.2.3",
+    "mysql": "^2.18.1"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.10.1",
+    "@babel/core": "^7.10.2",
+    "@babel/node": "^7.10.1",
+    "@babel/preset-env": "^7.10.2",
+    "nodemon": "^2.0.4"
   }
 }
