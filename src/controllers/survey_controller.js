@@ -7,6 +7,17 @@ import "../models/users_model"
 
 let survey_controller={}
 
+
+/*so the survey details api 
+Im keeping in this format
+{
+    "title":"NameXYZ"
+    "description":A gist of the survey basically
+    "data":{
+        //Heres the json about the survey
+    }
+}
+*/
 survey_controller.post=async(req,res)=>{
     let reqid = crypto.randomBytes(16).toString('hex');
     httpContext.set('ctx', reqid);
@@ -17,12 +28,12 @@ survey_controller.post=async(req,res)=>{
     );
     let reqbody = req.body
     if(!utils.ValidateSurveyForm(reqbody)){
-        let err = new Error("Email is a mandatory param")
+        let err = new Error("Mandatory params are missing")
         return rp.error(res, err, 400)
     }
     let sm=new SurveyModel()
     try{
-    let val=await sm.CreateSurvey(reqbody.email_id)
+    let val=await sm.CreateSurvey(reqbody.email_id,reqbody)
     }catch(err){
         return rp.error(res,err,404)
     }

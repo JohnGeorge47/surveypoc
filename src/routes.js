@@ -6,6 +6,7 @@ const router = express.Router();
 
 
 router.post("/signup",signup_controller.post)
+//Here ideally 
 router.post("/create_survey",survey_controller.post)
 
 module.exports=router

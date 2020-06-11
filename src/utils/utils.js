@@ -13,7 +13,11 @@ utils.FormValidation=(reqbody)=>{
 }
 
 utils.ValidateSurveyForm=(reqbody)=>{
-    if(!reqbody.hasOwnProperty('email_id')){
+    if(!reqbody.hasOwnProperty('email_id')||
+       !reqbody.hasOwnProperty('title')||
+       !reqbody.hasOwnProperty('description')||
+       !reqbody.hasOwnProperty('data')
+    ){
       return 0
     }
     return 1
