@@ -15,6 +15,9 @@ Im keeping in this format
     "description":A gist of the survey basically
     "data":{
         //Heres the json about the survey
+     "target":{
+         "gender":
+     }   
     }
 }
 */
@@ -34,6 +37,7 @@ survey_controller.post=async(req,res)=>{
     let sm=new SurveyModel()
     try{
     let val=await sm.CreateSurvey(reqbody.email_id,reqbody)
+    return rp.success(res,responseData)
     }catch(err){
         return rp.error(res,err,404)
     }
