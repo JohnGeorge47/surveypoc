@@ -14,8 +14,6 @@ class SurveyModel extends MySQL {
     */
     async CreateSurvey(email, surveydetails) {
         let um = new user_model()
-        console.log(this.connection)
-
         try {
             let user_id = await um.FindUserID(email)
             if (user_id == null) {
@@ -82,6 +80,8 @@ class SurveyModel extends MySQL {
             throw error
         }
     }
+
+    //This handles the survey details
     async BulkSurveyDetails(email_id) {
         let um = new user_model()
         try {
@@ -96,14 +96,21 @@ class SurveyModel extends MySQL {
                 let result = await this.GetRespondentSurveys(user_id)
                 return result
             }
-            let result=await this.GetCoordinatorSurvey(user_id)
+            let result = await this.GetCoordinatorSurvey(user_id)
             return result
         } catch (err) {
             throw err
         }
     }
-
-    async GetCoordinatorSurvey(user_id){
+    /**
+     * To get all surveys created by the coordinator
+     * @param user_id coordinator id
+     */
+    async GetCoordinatorSurvey(user_id) {
+        /**
+         *We do a join with the createdsurveys table and the survey_user_map
+         *To get all the details
+         */
         let query = `SELECT
                         m.map_id,
                         m.responded,
@@ -111,6 +118,7 @@ class SurveyModel extends MySQL {
                         m.updated_at,
                         s.created_at,
                         s.title,
+                        s.survey_id,
                         s.description
                     FROM
                         survey_user_map AS m
@@ -118,20 +126,20 @@ class SurveyModel extends MySQL {
                         ON m.survey_id=s.survey_id
                     WHERE
                         s.created_by=?`
-         try {
-           let rows=await this.connection.query(query,[user_id])
-           if (rows[0].length==0){
-               return null
-           }
-           let result=[]
-           rows[0].forEach(element => {
-               var respJson=Object.assign({}, element);
-               result.push(respJson)
-           });
-           return result
-         } catch (error) {
-             throw error
-         }  
+        try {
+            let rows = await this.connection.query(query, [user_id])
+            if (rows[0].length == 0) {
+                return null
+            }
+            let result = []
+            rows[0].forEach(element => {
+                var respJson = Object.assign({}, element);
+                result.push(respJson)
+            });
+            return result
+        } catch (error) {
+            throw error
+        }
     }
 
     async GetRespondentSurveys(user_id) {
@@ -142,6 +150,7 @@ class SurveyModel extends MySQL {
                      m.updated_at,
                      s.created_at,
                      s.title,
+                     s.survey_id,
                      s.description
                    FROM
                      survey_user_map AS m
@@ -151,15 +160,109 @@ class SurveyModel extends MySQL {
                      m.user_id=?`
         try {
             let rows = await this.connection.query(query, [user_id])
-            if (rows[0].length==0){
+            if (rows[0].length == 0) {
                 return null
             }
-            let result=[]
+            let result = []
             rows[0].forEach(element => {
-                var respJson=Object.assign({}, element);
+                var respJson = Object.assign({}, element);
                 result.push(respJson)
             });
             return result
+        } catch (error) {
+            throw error
+        }
+    }
+    
+    /**
+     * This is the function which handles the logic on whether user is
+     * a coordinator or a respondant
+     * @param survey_id the survey id to update
+     * @param reqbody this is of the format
+     * {
+     *  "email_id":"blah@blah.com"
+     *  "response_json":"val"
+     * }
+     */
+    async UpdateSurvey(survey_id, reqbody) {
+        let email_id = reqbody.email_id
+        let um = new user_model()
+        try {
+            let user_id = await um.FindUserID(email_id)
+            if (user_id == null) {
+                let newerr = new errorhandler.UserDoesNotExist("the user does not exist", 1, 404)
+                throw newerr
+            }
+            let user_type = await um.Findrole(user_id)
+            //Here we check if the person is a respondant or a coordinator and accordingly call
+            if (user_type == 2) {
+                await this.UpdateRespondentSurvey(survey_id, user_id, reqbody.response_json)
+                return
+            }
+            await this.UpdateCoordinatorSurvey(survey_id, user_id, reqbody.response_json)
+        } catch (error) {
+            throw error
+        }
+
+    }
+
+    /**
+     * 
+     * @param survey_id this is the id of the survey being sent 
+     * @param user_id the id of the respondant
+     * @param respJson the response json to be recorded
+     */
+    async UpdateRespondentSurvey(survey_id, user_id, respJson) {
+        console.log(survey_id, user_id)
+        //This query is used to check if the respondent has answered this survey before
+        //if true then we throw an error saying permission denied
+        let query1 = `SELECT responded FROM survey_user_map 
+                    WHERE survey_id=? AND user_id=?`
+        //This query is used to insert the response sent by the respondant as well as update
+        //the responded to true so the person cant submit the form again
+        let query2 = `UPDATE survey_user_map
+                    SET response_json=?,updated_at=?,responded=? WHERE survey_id=? AND user_id=?`
+        try {
+            let rows = await this.connection.query(query1, [survey_id, user_id])
+            if (rows[0][0].responded) {
+                let newerr = new errorhandler.NoPermissionError("the user does not have permission", 2, 405)
+                throw newerr
+            }
+            let current_timestamp = new Date().toISOString().slice(0, 19).replace('T', ' ');
+            let result = await this.connection.query(query2, [JSON.stringify(respJson), current_timestamp, true, survey_id, user_id])
+            console.log(result)
+        } catch (err) {
+            throw err
+        }
+    }
+
+    /**
+     * The function is used to update the survey for the coordinator as well as the respondants
+     * @param  survey_id The survey id you are looking for
+     * @param  user_id  The user_id of the coordinator
+     * @param  respJson The change json
+     * returns null or throws an error
+     */
+    async UpdateCoordinatorSurvey(survey_id, user_id, respJson) {
+        /**
+         * In this function im doing a transaction 
+         * 1.To update the createdsurveys table with the new survey json
+         * 2.To update survey for all the respondants of this particular survey
+         */
+        let query1 = `UPDATE createdsurveys
+                    SET survey_json=?,updated_at=? WHERE survey_id=? AND created_by=?`
+
+        let query2 = `UPDATE survey_user_map
+                    SET response_json=?,updated_at=? WHERE survey_id=?`
+        let current_timestamp = new Date().toISOString().slice(0, 19).replace('T', ' ');
+        const conn = await this.connection.getConnection()
+        await conn.beginTransaction();
+        try {
+            let query1_result = await conn.query(query1, [JSON.stringify(respJson), current_timestamp, survey_id, user_id])
+            console.log(query1_result)
+            let query2_result = await conn.query(query2, [JSON.stringify(respJson), current_timestamp, survey_id])
+            console.log(query2_result)
+            await conn.commit()
         } catch (error) {
             throw error
         }

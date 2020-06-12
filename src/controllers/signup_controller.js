@@ -21,6 +21,7 @@ signup_controller.post = async (req, res) => {
         return rp.error(res, err, 400)
     }
     try {
+        //Creating a hash here using bcrypt so that we store a hashed pwd in the db
         let hash = await bcrypt.hash(req.body.password, saltrounds)
         req.body.password=hash
         let sm=new SignupModel()

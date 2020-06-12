@@ -66,6 +66,37 @@ survey_controller.get = async (req, res) => {
     }
 }
 
+survey_controller.put=async(req,res)=>{
+    let survey_id=req.params.survey_id
+    let reqid = crypto.randomBytes(16).toString('hex');
+    httpContext.set('ctx', reqid);
+    console.log(req.body.email_id)
+    let rp = new responseHandler.ResponseHandler(
+        'application/json',
+        'PUT',
+        httpContext.get('ctx')
+    )
+    if(!survey_id==undefined){
+        let err = new Error("Mandatory params are missing")
+        return rp.error(res, err, 400)
+    }
+    if(!req.body.hasOwnProperty('email_id')){
+        let err = new Error("Mandatory params are missing")
+        return rp.error(res, err, 400)
+    }
+    if(!req.body.hasOwnProperty('response_json')){
+        let err = new Error("Mandatory params are missing")
+        return rp.error(res, err, 400)  
+      }
+      let sm = new SurveyModel()
+    try {
+        await sm.UpdateSurvey(survey_id,req.body)
+        return rp.success(res,"Your changes have been recorded",200)
+    } catch (error) {
+        return rp.error(res, error, 400) 
+    }
+}
+
 
 
 module.exports = survey_controller
