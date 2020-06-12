@@ -44,32 +44,32 @@ class SurveyModel extends MySQL {
 
     async AddToSurveyMapTable(current_timestamp, insertId, surveydetails) {
         let query = "INSERT INTO survey_user_map(survey_id,responded,response_json,user_id) SELECT ?,?,?,user_id from users WHERE user_type=? "
-        if (!surveydetails.target.hasOwnProperty("gender")&&surveydetails.target.hasOwnProperty('age')) {
-            let agearr=surveydetails.target.age.split("-")
+        if (!surveydetails.target.hasOwnProperty("gender") && surveydetails.target.hasOwnProperty('age')) {
+            let agearr = surveydetails.target.age.split("-")
             query = query + "AND age BETWEEN ? AND ?"
             try {
                 console.log(query);
                 console.log(agearr)
-                let response = await this.connection.query(query, [insertId, false, JSON.stringify(surveydetails.data),2,parseInt(agearr[0]),parseInt(agearr[1])])
+                let response = await this.connection.query(query, [insertId, false, JSON.stringify(surveydetails.data), 2, parseInt(agearr[0]), parseInt(agearr[1])])
                 return response
             } catch (err) {
-                throw  err
+                throw err
             }
-        } else if (!surveydetails.target.hasOwnProperty("age")&&surveydetails.target.hasOwnProperty('gender')) {
+        } else if (!surveydetails.target.hasOwnProperty("age") && surveydetails.target.hasOwnProperty('gender')) {
             query = query + "WHERE gender=?"
             console.log(query)
             try {
-                let response = await this.connection.query(query, [insertId, false, JSON.stringify(surveydetails.data),2, surveydetails.target.gender])
+                let response = await this.connection.query(query, [insertId, false, JSON.stringify(surveydetails.data), 2, surveydetails.target.gender])
                 return response
             } catch (err) {
                 throw err
             }
         } else if (surveydetails.target.hasOwnProperty("age") &&
             surveydetails.target.hasOwnProperty("gender")) {
-                let agearr=surveydetails.target.age.split("-")
+            let agearr = surveydetails.target.age.split("-")
             query = query + "WHERE gender=? AND age BETWEEN ? AND ?"
             try {
-                let response = await this.connection.query(query, [insertId, false, JSON.stringify(surveydetails.data),2, surveydetails.target.gender,parseInt(agearr[0]),parseInt(agearr[1])])
+                let response = await this.connection.query(query, [insertId, false, JSON.stringify(surveydetails.data), 2, surveydetails.target.gender, parseInt(agearr[0]), parseInt(agearr[1])])
                 return response
             } catch (error) {
                 throw error
@@ -79,9 +79,90 @@ class SurveyModel extends MySQL {
             let response = await this.connection.query(query, [insertId, false, JSON.stringify(surveydetails.data)])
             return response
         } catch (error) {
-            throw  error
+            throw error
         }
+    }
+    async BulkSurveyDetails(email_id) {
+        let um = new user_model()
+        try {
+            let user_id = await um.FindUserID(email_id)
+            console.log(user_id)
+            if (user_id == null) {
+                let newerr = new errorhandler.UserDoesNotExist("the user does not exist", 1, 404)
+                throw newerr
+            }
+            let user_type = await um.Findrole(user_id)
+            if (user_type == 2) {
+                let result = await this.GetRespondentSurveys(user_id)
+                return result
+            }
+            let result=await this.GetCoordinatorSurvey(user_id)
+            return result
+        } catch (err) {
+            throw err
+        }
+    }
 
+    async GetCoordinatorSurvey(user_id){
+        let query = `SELECT
+                        m.map_id,
+                        m.responded,
+                        m.response_json,
+                        m.updated_at,
+                        s.created_at,
+                        s.title,
+                        s.description
+                    FROM
+                        survey_user_map AS m
+                        INNER JOIN createdsurveys AS s
+                        ON m.survey_id=s.survey_id
+                    WHERE
+                        s.created_by=?`
+         try {
+           let rows=await this.connection.query(query,[user_id])
+           if (rows[0].length==0){
+               return null
+           }
+           let result=[]
+           rows[0].forEach(element => {
+               var respJson=Object.assign({}, element);
+               result.push(respJson)
+           });
+           return result
+         } catch (error) {
+             throw error
+         }  
+    }
+
+    async GetRespondentSurveys(user_id) {
+        let query = `SELECT
+                     m.map_id,
+                     m.responded,
+                     m.response_json,
+                     m.updated_at,
+                     s.created_at,
+                     s.title,
+                     s.description
+                   FROM
+                     survey_user_map AS m
+                   INNER JOIN createdsurveys AS s
+                     ON m.survey_id=s.survey_id
+                   WHERE
+                     m.user_id=?`
+        try {
+            let rows = await this.connection.query(query, [user_id])
+            if (rows[0].length==0){
+                return null
+            }
+            let result=[]
+            rows[0].forEach(element => {
+                var respJson=Object.assign({}, element);
+                result.push(respJson)
+            });
+            return result
+        } catch (error) {
+            throw error
+        }
     }
 }
 

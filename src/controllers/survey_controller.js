@@ -1,11 +1,11 @@
 import httpContext from 'express-http-context';
 import responseHandler from '../utils/responsehandler';
-import  SurveyModel from '../models/survey_model'
+import SurveyModel from '../models/survey_model'
 import utils from "../utils/utils"
 import crypto from "crypto"
 import "../models/users_model"
 
-let survey_controller={}
+let survey_controller = {}
 
 
 /*so the survey details api 
@@ -21,28 +21,51 @@ Im keeping in this format
     }
 }
 */
-survey_controller.post=async(req,res)=>{
+survey_controller.post = async (req, res) => {
     let reqid = crypto.randomBytes(16).toString('hex');
     httpContext.set('ctx', reqid);
     let rp = new responseHandler.ResponseHandler(
         'application/json',
         'post',
-        httpContext.get('exoCtx')
+        httpContext.get('ctx')
     );
     let reqbody = req.body
-    if(!utils.ValidateSurveyForm(reqbody)){
+    if (!utils.ValidateSurveyForm(reqbody)) {
         let err = new Error("Mandatory params are missing")
         return rp.error(res, err, 400)
     }
-    let sm=new SurveyModel()
-    try{
-    let val=await sm.CreateSurvey(reqbody.email_id,reqbody)
-    return rp.success(res,responseData)
-    }catch(err){
-        return rp.error(res,err,404)
+    let sm = new SurveyModel()
+    try {
+        let val = await sm.CreateSurvey(reqbody.email_id, reqbody)
+        return rp.success(res, responseData)
+    } catch (err) {
+        return rp.error(res, err, 404)
+    }
+}
+
+//This can be changed into a post if there are privacy concerns becuse email is a param
+survey_controller.get = async (req, res) => {
+    let reqid = crypto.randomBytes(16).toString('hex');
+    httpContext.set('ctx', reqid);
+    let rp = new responseHandler.ResponseHandler(
+        'application/json',
+        'GET',
+        httpContext.get('ctx')
+    );
+    var email_id = req.query.email_id
+    if (email_id == undefined) {
+        let err = new Error("Mandatory params are missing")
+        return rp.error(res, err, 400)
+    }
+    let sm = new SurveyModel()
+    try {
+        let result=await sm.BulkSurveyDetails(email_id)
+        return rp.success(res,result,200)
+    } catch (err) {
+        throw err
     }
 }
 
 
 
-module.exports=survey_controller
+module.exports = survey_controller

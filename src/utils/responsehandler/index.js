@@ -21,13 +21,7 @@ export class ResponseHandler {
             metadata: this.method,
             method:this.method,
             request_id: this.rid,
-            response: [
-                {
-                    status: "success",
-                    code: status,
-                    data: data,
-                }
-            ]
+            response:data
         }
         let responder = GetResponseStrategy(this.rtype);
         responder.send(res, fullResp, status);
