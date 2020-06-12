@@ -42,6 +42,8 @@ class SurveyModel extends MySQL {
 
     async AddToSurveyMapTable(current_timestamp, insertId, surveydetails) {
         let query = "INSERT INTO survey_user_map(survey_id,responded,response_json,user_id) SELECT ?,?,?,user_id from users WHERE user_type=? "
+        console.log(surveydetails.target)
+        if(surveydetails.target!=undefined){
         if (!surveydetails.target.hasOwnProperty("gender") && surveydetails.target.hasOwnProperty('age')) {
             let agearr = surveydetails.target.age.split("-")
             query = query + "AND age BETWEEN ? AND ?"
@@ -54,7 +56,7 @@ class SurveyModel extends MySQL {
                 throw err
             }
         } else if (!surveydetails.target.hasOwnProperty("age") && surveydetails.target.hasOwnProperty('gender')) {
-            query = query + "WHERE gender=?"
+            query = query + "AND gender=?"
             console.log(query)
             try {
                 let response = await this.connection.query(query, [insertId, false, JSON.stringify(surveydetails.data), 2, surveydetails.target.gender])
@@ -65,7 +67,7 @@ class SurveyModel extends MySQL {
         } else if (surveydetails.target.hasOwnProperty("age") &&
             surveydetails.target.hasOwnProperty("gender")) {
             let agearr = surveydetails.target.age.split("-")
-            query = query + "WHERE gender=? AND age BETWEEN ? AND ?"
+            query = query + "AND gender=? AND age BETWEEN ? AND ?"
             try {
                 let response = await this.connection.query(query, [insertId, false, JSON.stringify(surveydetails.data), 2, surveydetails.target.gender, parseInt(agearr[0]), parseInt(agearr[1])])
                 return response
@@ -73,8 +75,10 @@ class SurveyModel extends MySQL {
                 throw error
             }
         }
+    }
         try {
-            let response = await this.connection.query(query, [insertId, false, JSON.stringify(surveydetails.data)])
+            console.log(query)
+            let response = await this.connection.query(query, [insertId, false, JSON.stringify(surveydetails.data),2])
             return response
         } catch (error) {
             throw error

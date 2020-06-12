@@ -37,7 +37,7 @@ survey_controller.post = async (req, res) => {
     let sm = new SurveyModel()
     try {
         let val = await sm.CreateSurvey(reqbody.email_id, reqbody)
-        return rp.success(res, responseData)
+        return rp.success(res, val)
     } catch (err) {
         return rp.error(res, err, 404)
     }
