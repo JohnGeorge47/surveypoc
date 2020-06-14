@@ -2,6 +2,8 @@ import express from "express"
 import bodyParser from "body-parser"
 import httpContext from "express-http-context"
 import router from "./routes";
+require("regenerator-runtime/runtime");
+
 
 const app = express()
 let startTime = new Date();

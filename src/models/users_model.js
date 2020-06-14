@@ -1,4 +1,5 @@
 import MySQL from "../mysql/mysql"
+import errorhandler from "../utils/error_handler/error_handler"
 
 
 class UserModel extends MySQL {
@@ -18,14 +19,26 @@ class UserModel extends MySQL {
         let query = "SELECT user_id from users WHERE email_id=?"
         try {
             let rows = await this.connection.query(query, usermail)
-            if (rows[0][0]===undefined){
+            if (rows[0][0] === undefined) {
                 return null
             }
             return rows[0][0].user_id
         } catch (err) {
             throw err
         }
-
+    }
+    async GetPassword(usermail) {
+        let query = "SELECT password FROM passwords WHERE email_id=?"
+        try {
+            let rows = await this.connection.query(query, [usermail])
+            if (rows[0][0] === undefined) {
+                return null
+            }
+            return rows[0][0].password
+        } catch (err) {
+            let newerr = new errorhandler.MySQLErr(err.message, 1, 500)
+            throw newerr
+        }
     }
 }
 

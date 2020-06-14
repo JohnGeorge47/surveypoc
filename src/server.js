@@ -2,6 +2,8 @@ import cluster from "cluster"
 import os from "os"
 import config from "../config/config.json"
 import app from "./app"
+require("regenerator-runtime/runtime");
+
 
 /**
  * *Check if you're in the master process 
