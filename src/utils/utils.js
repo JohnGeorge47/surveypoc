@@ -22,5 +22,13 @@ utils.ValidateSurveyForm=(reqbody)=>{
     }
     return 1
 }
+utils.LoginFormValidation=(reqbody)=>{
+  if(!reqbody.hasOwnProperty('email_id')||
+     !reqbody.hasOwnProperty('password')
+    ){
+      return 0
+    }
+    return 1
+}
 
 module.exports=utils

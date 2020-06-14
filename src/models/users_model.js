@@ -27,6 +27,20 @@ class UserModel extends MySQL {
         }
 
     }
+
+    async GetPassword(usermail) {
+        let query = "SELECT password FROM passwords WHERE email_id=?"
+        try {
+            let rows = await this.connection.query(query, [usermail])
+            if (rows[0][0] === undefined) {
+                return null
+            }
+            return rows[0][0].password
+        } catch (err) {
+            let newerr = new errorhandler.MySQLErr(err.message, 1, 500)
+            throw newerr
+        }
+    }
 }
 
 export default UserModel
