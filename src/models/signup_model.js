@@ -1,7 +1,5 @@
 import MySQL from "../mysql/mysql"
 import mysql from "mysql2/promise"
-require("regenerator-runtime/runtime");
-
 
 class SignUpModel extends MySQL{
     constructor(){

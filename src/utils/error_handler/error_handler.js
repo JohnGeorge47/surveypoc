@@ -33,14 +33,7 @@ class UserDoesNotExist extends SurveyAppError {
     }
 }
 
-class WrongPasswordError extends SurveyAppError{
-    constructor(message,id,status){
-        super(message,id,status)
-    }
-}
-
 module.exports = {
-    WrongPasswordError,
     SurveyAppError,
     MySQLErr,
     HttpErr,

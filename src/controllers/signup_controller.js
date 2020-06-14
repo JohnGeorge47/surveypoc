@@ -4,8 +4,6 @@ import httpContext from 'express-http-context';
 import responseHandler from '../utils/responsehandler';
 import utils from "../utils/utils"
 import SignupModel from "../models/signup_model"
-import "regenerator-runtime/runtime.js";
-
 let signup_controller = {}
 let saltrounds = 10
 signup_controller.post = async (req, res) => {
